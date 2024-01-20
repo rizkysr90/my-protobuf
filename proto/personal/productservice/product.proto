@@ -16,5 +16,5 @@ message Product  {
   ];
   int64 price = 4 [
     json_name = "price"
-  ];
+  ]
 }
