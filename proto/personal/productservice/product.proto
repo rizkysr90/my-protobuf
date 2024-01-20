@@ -2,7 +2,7 @@
 syntax = "proto3";
 package personal.productservice.product;
 
-option go_package = "github.com/rizkysr90/my-protobuf/gen/go/personal/product;product";
+option go_package = "github.com/rizkysr90/my-protobuf/gen/go/personal/productservice/product;product";
 
 // product master data
 message Product  {
