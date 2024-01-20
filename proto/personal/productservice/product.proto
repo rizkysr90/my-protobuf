@@ -1,0 +1,20 @@
+syntax = "proto3";
+package personal.productservice.product;
+
+option go_package = "github.com/rizkysr90/my-protobuf/gen/go/product;product";
+
+// product master data
+message Product  {
+  string pid = 1 [
+    json_name = "pid"
+  ];
+  string name = 2 [
+    json_name = "name"
+  ];
+  string stock = 3 [
+    json_name = "stock"
+  ];
+  int64 price = 4 [
+    json_name = "price"
+  ];
+}
