@@ -1,3 +1,4 @@
+// product service
 syntax = "proto3";
 package personal.productservice.product;
 
@@ -5,16 +6,63 @@ option go_package = "github.com/rizkysr90/my-protobuf/gen/go/product;product";
 
 // product master data
 message Product  {
-  string pid = 1 [
+  // product id
+  uint64 pid = 1 [
     json_name = "pid"
   ];
+  // product name
   string name = 2 [
     json_name = "name"
   ];
+  // product stock
   string stock = 3 [
     json_name = "stock"
   ];
+  // price of product
   int64 price = 4 [
     json_name = "price"
-  ]
+  ];
+}
+// list of product 
+message ListProduct {
+  // list of product data 
+  repeated Product products = 1 [
+    json_name = "products"
+  ];
+}
+// update product by pid
+message UpdateProduct {
+  // id updated product
+  uint32 pid = 1 [
+      json_name = "pid"
+  ];
+  // updated data product
+  Product updated_data_product = 2 [
+     json_name = "updated_data_product"
+  ];
+}
+// delete product by pid
+message DeleteProduct {
+  // id updated product
+  uint32 pid = 1 [
+    json_name = "pid"
+  ];
+}
+// response rpc
+message Response {
+  // status of rpc call, 0 is failed, 1 is success
+  uint32 status = 1 [
+    json_name = "status"
+  ];
+}
+//  grpc service product
+service ProductService {
+  // create new product 
+  rpc Create(Product) returns(Response) {}
+  // get list of product data   
+  rpc GetList(ListProduct) returns(Response) {}
+  // update product data
+  rpc Update(UpdateProduct) returns(Response) {}
+  // delete product data
+  rpc Delete(DeleteProduct) returns(Response) {}
 }
