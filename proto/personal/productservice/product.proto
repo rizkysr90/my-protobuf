@@ -15,7 +15,7 @@ message Product  {
     json_name = "name"
   ];
   // product stock
-  string stock = 3 [
+  int64 stock = 3 [
     json_name = "stock"
   ];
   // price of product
