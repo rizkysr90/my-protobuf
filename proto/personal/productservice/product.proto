@@ -1,7 +1,7 @@
 // product service
 syntax = "proto3";
 package personal.productservice.product;
-
+import "google/protobuf/empty.proto";
 option go_package = "github.com/rizkysr90/my-protobuf/gen/go/personal/productservice/product;product";
 
 // product master data
@@ -65,4 +65,8 @@ service ProductService {
   rpc Update(UpdateProduct) returns(Response) {}
   // delete product data
   rpc Delete(DeleteProduct) returns(Response) {}
+  // create new product streams
+  rpc CreateProducts(stream Product) returns(Response) {}
+  // get all products streams
+  rpc GetListStream(google.protobuf.Empty) returns(stream Product) {}
 }
