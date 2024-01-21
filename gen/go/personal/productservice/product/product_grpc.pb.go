@@ -10,6 +10,7 @@ package product
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -21,10 +22,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	ProductService_Create_FullMethodName  = "/personal.productservice.product.ProductService/Create"
-	ProductService_GetList_FullMethodName = "/personal.productservice.product.ProductService/GetList"
-	ProductService_Update_FullMethodName  = "/personal.productservice.product.ProductService/Update"
-	ProductService_Delete_FullMethodName  = "/personal.productservice.product.ProductService/Delete"
+	ProductService_Create_FullMethodName         = "/personal.productservice.product.ProductService/Create"
+	ProductService_GetList_FullMethodName        = "/personal.productservice.product.ProductService/GetList"
+	ProductService_Update_FullMethodName         = "/personal.productservice.product.ProductService/Update"
+	ProductService_Delete_FullMethodName         = "/personal.productservice.product.ProductService/Delete"
+	ProductService_CreateProducts_FullMethodName = "/personal.productservice.product.ProductService/CreateProducts"
+	ProductService_GetListStream_FullMethodName  = "/personal.productservice.product.ProductService/GetListStream"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -39,6 +42,10 @@ type ProductServiceClient interface {
 	Update(ctx context.Context, in *UpdateProduct, opts ...grpc.CallOption) (*Response, error)
 	// delete product data
 	Delete(ctx context.Context, in *DeleteProduct, opts ...grpc.CallOption) (*Response, error)
+	// create new product streams
+	CreateProducts(ctx context.Context, opts ...grpc.CallOption) (ProductService_CreateProductsClient, error)
+	// get all products streams
+	GetListStream(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (ProductService_GetListStreamClient, error)
 }
 
 type productServiceClient struct {
@@ -85,6 +92,72 @@ func (c *productServiceClient) Delete(ctx context.Context, in *DeleteProduct, op
 	return out, nil
 }
 
+func (c *productServiceClient) CreateProducts(ctx context.Context, opts ...grpc.CallOption) (ProductService_CreateProductsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ProductService_ServiceDesc.Streams[0], ProductService_CreateProducts_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &productServiceCreateProductsClient{stream}
+	return x, nil
+}
+
+type ProductService_CreateProductsClient interface {
+	Send(*Product) error
+	CloseAndRecv() (*Response, error)
+	grpc.ClientStream
+}
+
+type productServiceCreateProductsClient struct {
+	grpc.ClientStream
+}
+
+func (x *productServiceCreateProductsClient) Send(m *Product) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *productServiceCreateProductsClient) CloseAndRecv() (*Response, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(Response)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *productServiceClient) GetListStream(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (ProductService_GetListStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ProductService_ServiceDesc.Streams[1], ProductService_GetListStream_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &productServiceGetListStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ProductService_GetListStreamClient interface {
+	Recv() (*Product, error)
+	grpc.ClientStream
+}
+
+type productServiceGetListStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *productServiceGetListStreamClient) Recv() (*Product, error) {
+	m := new(Product)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations must embed UnimplementedProductServiceServer
 // for forward compatibility
@@ -97,6 +170,10 @@ type ProductServiceServer interface {
 	Update(context.Context, *UpdateProduct) (*Response, error)
 	// delete product data
 	Delete(context.Context, *DeleteProduct) (*Response, error)
+	// create new product streams
+	CreateProducts(ProductService_CreateProductsServer) error
+	// get all products streams
+	GetListStream(*empty.Empty, ProductService_GetListStreamServer) error
 	mustEmbedUnimplementedProductServiceServer()
 }
 
@@ -115,6 +192,12 @@ func (UnimplementedProductServiceServer) Update(context.Context, *UpdateProduct)
 }
 func (UnimplementedProductServiceServer) Delete(context.Context, *DeleteProduct) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedProductServiceServer) CreateProducts(ProductService_CreateProductsServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateProducts not implemented")
+}
+func (UnimplementedProductServiceServer) GetListStream(*empty.Empty, ProductService_GetListStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetListStream not implemented")
 }
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 
@@ -201,6 +284,53 @@ func _ProductService_Delete_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_CreateProducts_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ProductServiceServer).CreateProducts(&productServiceCreateProductsServer{stream})
+}
+
+type ProductService_CreateProductsServer interface {
+	SendAndClose(*Response) error
+	Recv() (*Product, error)
+	grpc.ServerStream
+}
+
+type productServiceCreateProductsServer struct {
+	grpc.ServerStream
+}
+
+func (x *productServiceCreateProductsServer) SendAndClose(m *Response) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *productServiceCreateProductsServer) Recv() (*Product, error) {
+	m := new(Product)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _ProductService_GetListStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(empty.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ProductServiceServer).GetListStream(m, &productServiceGetListStreamServer{stream})
+}
+
+type ProductService_GetListStreamServer interface {
+	Send(*Product) error
+	grpc.ServerStream
+}
+
+type productServiceGetListStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *productServiceGetListStreamServer) Send(m *Product) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -225,6 +355,17 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_Delete_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateProducts",
+			Handler:       _ProductService_CreateProducts_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetListStream",
+			Handler:       _ProductService_GetListStream_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/personal/productservice/product.proto",
 }
